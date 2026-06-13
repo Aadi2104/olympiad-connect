@@ -1,7 +1,7 @@
 from fastapi import Depends,Request
 from fastapi.security import HTTPBearer
 from sqlalchemy.orm.session import Session
-from app.services.user_services import AuthServices
+from app.services.user_services import UserServices
 from app.core.security import decode_access_token
 from app.core.errors import TokenNotFound, InvalidToken , NotAuthorized
 from app.models.user_model import User, UserRole
@@ -10,7 +10,7 @@ from typing import Any,List
 import jwt
 
 
-auth_services=AuthServices()
+user_services=UserServices()
 
 class TokenBearer(HTTPBearer):
 
@@ -36,7 +36,7 @@ class TokenBearer(HTTPBearer):
 
 def get_current_user(token_data:dict[str,Any] = Depends(TokenBearer()),session:Session=Depends(get_db)) ->User:
     user_id=token_data.get("user_id")
-    user = auth_services.get_user(user_id,session)
+    user = user_services.get_user(user_id,session)
     return user
 
 
