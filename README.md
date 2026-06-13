@@ -97,7 +97,7 @@ source venv/bin/activate
 
 Install Dependencies
 
-pip install -r requirement.txt
+pip install -r requirements.txt
 
 Environment Variables
 
