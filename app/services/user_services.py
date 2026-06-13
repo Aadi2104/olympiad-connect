@@ -1,4 +1,4 @@
-from app.schemas.auth_schemas import UserCreateModel,UserLoginModel, UserVerifyModel, UserForgotPasswordModel, UserResetPasswordModel, UserManagementModel
+from app.schemas.user_schemas import UserCreateModel,UserLoginModel, UserVerifyModel, UserForgotPasswordModel, UserResetPasswordModel, UserManagementModel, UserLoginResponseModel , MessageResponseModel
 from sqlalchemy.orm.session import Session
 from app.models.user_model import User,UserRole
 from app.core.errors import UserAlreadyExists,UserNotExist,InvalidCredentials, OTPRequired, InvalidOTP, InvalidPassword , UserAlreadyHasRole, SuperAdminModificationNotAllowed, UserStatusConflict
@@ -6,30 +6,31 @@ from app.core.security import (hash_password,verify_password,create_access_token
 from app.services.mail_services import Mail
 from pydantic import EmailStr
 from fastapi import BackgroundTasks
+from typing import List
 
 mail_service = Mail()
 
-class AuthServices():
-    def get_user(self,user_id:int,session:Session):
+class UserServices:
+    def get_user(self,user_id:int,session:Session)-> User:
         user = session.query(User).filter(User.id == user_id).first()
         if not user:
             raise UserNotExist()
         return user
         
     
-    def get_all_users(self,session:Session):
-        return session.query(User).filter(User.is_active.is_(True)).all()
+    def get_all_users(self,offset:int,size:int,session:Session)->List[User]:
+        return session.query(User).filter(User.is_active.is_(True)).offset(offset).limit(size).all()
         
-    def get_user_by_email(self,user_email:EmailStr,session:Session):
+    def get_user_by_email(self,user_email:EmailStr,session:Session)->User | None:
         return  session.query(User).filter(User.email == user_email).first()
         
-    def ensure_user_exists(self,user_email:EmailStr,session:Session):
+    def ensure_user_exists(self,user_email:EmailStr,session:Session)->User:
         user = self.get_user_by_email(user_email,session)
         if not user:
             raise UserNotExist()
         return user
         
-    def initiate_signup(self,user_data:UserCreateModel,bg_tasks:BackgroundTasks,session:Session):
+    def initiate_signup(self,user_data:UserCreateModel,bg_tasks:BackgroundTasks,session:Session) -> MessageResponseModel:
             user_email=user_data.email
             user_password=user_data.password
             user = self.get_user_by_email(user_email,session)
@@ -51,7 +52,7 @@ class AuthServices():
             }
             
             
-    def verify_user(self,otp_data:UserVerifyModel,token:str,session):
+    def verify_user(self,otp_data:UserVerifyModel,token:str,session:Session)->User:
         try:
             data = verify_signup_token(token)
             if not otp_data.otp:
@@ -74,7 +75,7 @@ class AuthServices():
             session.rollback()
             raise
    
-    def login_user(self,user_data:UserLoginModel,session:Session):
+    def login_user(self,user_data:UserLoginModel,session:Session)->UserLoginResponseModel:
         user_email=user_data.email
         user_password = user_data.password
         
@@ -84,10 +85,12 @@ class AuthServices():
             raise InvalidCredentials()
         
         token = create_access_token(user)
-        return token
+        return {
+            "access_token": token
+        }
 
     
-    def request_password_reset(self,email_data:UserForgotPasswordModel,bg_tasks:BackgroundTasks,session:Session):
+    def request_password_reset(self,email_data:UserForgotPasswordModel,bg_tasks:BackgroundTasks,session:Session) -> MessageResponseModel:
         
         
         user_email = email_data.email
@@ -104,7 +107,7 @@ class AuthServices():
             "message":"If an account exists, a password reset email has been sent"
         }
         
-    def reset_password(self,password_data:UserResetPasswordModel,token:str,session:Session):
+    def reset_password(self,password_data:UserResetPasswordModel,token:str,session:Session) -> MessageResponseModel:
         try:
             password = password_data.password
             
@@ -132,7 +135,7 @@ class AuthServices():
             raise
         
         
-    def activate_user(self,user_data:UserManagementModel,session:Session):
+    def activate_user(self,user_data:UserManagementModel,session:Session) -> MessageResponseModel:
         try:
             user = self.get_user(user_data.user_id,session)
             if user.role == UserRole.SUPER_ADMIN:
@@ -149,7 +152,7 @@ class AuthServices():
             session.rollback()
             raise
             
-    def deactivate_user(self,user_data:UserManagementModel,session:Session):
+    def deactivate_user(self,user_data:UserManagementModel,session:Session) -> MessageResponseModel:
         try:
             user = self.get_user(user_data.user_id,session)
             if user.role == UserRole.SUPER_ADMIN:
@@ -169,7 +172,7 @@ class AuthServices():
             
         
     
-    def promote_admin(self,user_data:UserManagementModel,session:Session):
+    def promote_admin(self,user_data:UserManagementModel,session:Session) ->MessageResponseModel:
         try:
             user = self.get_user(user_data.user_id,session)
             if not user.is_active:
@@ -188,7 +191,7 @@ class AuthServices():
             session.rollback()
             raise
         
-    def demote_admin(self,user_data:UserManagementModel,session:Session):
+    def demote_admin(self,user_data:UserManagementModel,session:Session)-> MessageResponseModel:
         try:
             user = self.get_user(user_data.user_id,session)
             if not user.is_active:
@@ -207,8 +210,8 @@ class AuthServices():
             session.rollback()
             raise
         
-    def get_all_admins(self,session:Session):
-        return session.query(User).filter(User.is_active.is_(True),User.role == UserRole.ADMIN).all()
+    def get_all_admins(self,offset:int,size:int,session:Session) -> List[User]:
+        return session.query(User).filter(User.is_active.is_(True),User.role == UserRole.ADMIN).offset(offset).limit(size).all()
         
             
             

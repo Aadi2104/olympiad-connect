@@ -35,3 +35,6 @@ class UserResetPasswordModel(BaseModel):
     
 class UserManagementModel(BaseModel):
     user_id: int
+    
+class UserLoginResponseModel(BaseModel):
+    access_token: str

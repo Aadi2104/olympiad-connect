@@ -70,14 +70,14 @@ class ApplicationServices:
             raise ApplicationNotExists()
         return application
 
-    def get_my_applications(self, user: User, session: Session) -> List[Application]:
+    def get_my_applications(self, user: User, offset:int, size:int, session: Session) -> List[Application]:
         applications = (
-            session.query(Application).filter(Application.user_id == user.id).all()
+            session.query(Application).filter(Application.user_id == user.id).offset(offset).limit(size).all()
         )
         return applications
 
-    def get_all_applications(self, session: Session) -> List[Application]:
-        applications = session.query(Application).all()
+    def get_all_applications(self,offset:int, size:int, session: Session) -> List[Application]:
+        applications = session.query(Application).offset(offset).limit(size).all()
         return applications
 
     def get_application_by_id(
@@ -92,7 +92,7 @@ class ApplicationServices:
 
     def update_application_status(
         self,
-        status: ApplicationUpdateStatusModel,
+        status_data: ApplicationUpdateStatusModel,
         application_id: int,
         session: Session,
     ) -> Application:
@@ -100,7 +100,7 @@ class ApplicationServices:
             application = self.get_application_by_id(application_id, session)
             if application.status != ApplicationStatus.PENDING:
                 raise ApplicationAlreadyReviewed()
-            application.status = status.status
+            application.status = status_data.status
             session.commit()
             session.refresh(application)
             return application
@@ -109,12 +109,12 @@ class ApplicationServices:
             session.rollback()
             raise
     
-    def get_applications_by_olympiad(self,olympiad_id:int,session:Session)->List[Application]:
+    def get_applications_by_olympiad(self,olympiad_id:int,offset:int, size:int,session:Session)->List[Application]:
         olympiad_services.get_olympiad(olympiad_id,session) 
-        applications = session.query(Application).filter(Application.olympiad_id == olympiad_id).all()
+        applications = session.query(Application).filter(Application.olympiad_id == olympiad_id).offset(offset).limit(size).all()
         return applications
         
         
-    def get_pending_applications(self,session:Session)->List[Application]:
-        applications = session.query(Application).filter(Application.status == ApplicationStatus.PENDING).all()
+    def get_pending_applications(self,offset:int, size:int,session:Session)->List[Application]:
+        applications = session.query(Application).filter(Application.status == ApplicationStatus.PENDING).offset(offset).limit(size).all()
         return applications

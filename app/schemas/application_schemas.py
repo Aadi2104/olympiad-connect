@@ -3,11 +3,8 @@ from app.models.application_model import ApplicationStatus
 from datetime import datetime
 
 
-
-
 class ApplicationResponseModel(BaseModel):
     id:int
-    user_id:int
     olympiad_id : int
     status : ApplicationStatus
     created_at: datetime
@@ -22,7 +19,7 @@ class ApplicationUpdateStatusModel(BaseModel):
     @classmethod
     def validate_status(cls,value:ApplicationStatus):
         if value == ApplicationStatus.PENDING:
-            raise ValueError("Aprrove or Reject the application")
+            raise ValueError("Aprrove or reject the application")
             
         return value
     

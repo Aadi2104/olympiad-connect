@@ -1,6 +1,7 @@
-from pydantic import BaseModel, field_validator, model_validator,ConfigDict
+from pydantic import BaseModel, field_validator, model_validator, ConfigDict
 from datetime import datetime
 from typing import Optional
+
 
 class OlympiadCreateModel(BaseModel):
     title: str
@@ -37,17 +38,17 @@ class OlympiadResponseModel(BaseModel):
     registration_start: datetime
     registration_end: datetime
     exam_date: datetime
-    created_by_id : int | None
-    
+    created_by_id: int | None
+
     model_config = ConfigDict(from_attributes=True)
-    
-    
+
+
 class OlympiadUpdateModel(BaseModel):
-    title:Optional[str] = None
+    title: Optional[str] = None
     description: Optional[str] = None
-    registration_start:Optional[datetime] = None
-    registration_end:Optional[datetime] = None
-    exam_date:Optional[datetime] = None
+    registration_start: Optional[datetime] = None
+    registration_end: Optional[datetime] = None
+    exam_date: Optional[datetime] = None
 
     @field_validator(
         "registration_start", "registration_end", "exam_date", mode="before"
@@ -63,10 +64,10 @@ class OlympiadDeleteResponseModel(BaseModel):
     id: int
     title: str
     description: str
-    is_active : bool
+    is_active: bool
     registration_start: datetime
     registration_end: datetime
     exam_date: datetime
-    created_by_id : int | None
-    
+    created_by_id: int | None
+
     model_config = ConfigDict(from_attributes=True)

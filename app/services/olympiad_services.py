@@ -41,8 +41,8 @@ class OlympiadServices:
             raise
         
         
-    def get_all_olympiads(self,session:Session) -> List[Olympiad]:
-        return session.query(Olympiad).filter(Olympiad.is_active==True).all()
+    def get_all_olympiads(self,offset:int,size:int,session:Session) -> List[Olympiad]:
+        return session.query(Olympiad).filter(Olympiad.is_active==True).offset(offset).limit(size).all()
     
     
     def update_olympiad(self,olympiad_id:int,olympiad_data:OlympiadUpdateModel,session:Session) -> Olympiad:

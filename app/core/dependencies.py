@@ -1,7 +1,7 @@
 from fastapi import Depends,Request
 from fastapi.security import HTTPBearer
 from sqlalchemy.orm.session import Session
-from app.services.user_sevices import AuthServices
+from app.services.user_services import AuthServices
 from app.core.security import decode_access_token
 from app.core.errors import TokenNotFound, InvalidToken , NotAuthorized
 from app.models.user_model import User, UserRole
