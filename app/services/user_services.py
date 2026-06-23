@@ -7,6 +7,7 @@ from app.services.mail_services import Mail
 from pydantic import EmailStr
 from fastapi import BackgroundTasks
 from typing import List
+from sqlalchemy import desc
 
 mail_service = Mail()
 
@@ -18,8 +19,25 @@ class UserServices:
         return user
         
     
-    def get_all_users(self,offset:int,size:int,session:Session)->List[User]:
-        return session.query(User).filter(User.is_active.is_(True)).offset(offset).limit(size).all()
+    def get_all_users(self,offset:int,size:int,session:Session, order:str, email : str | None = None, role : UserRole | None =None , is_active: bool | None = None, sort_by: str | None = None
+)->List[User]:
+        
+        query = session.query(User)
+        if email:
+            query = query.filter(User.email.ilike(f"%{email}%"))
+        if role:
+            query = query.filter(User.role == role)
+        if is_active is not None:
+            query  = query.filter(User.is_active == is_active)
+        if sort_by:
+            column = getattr(User, sort_by)
+            if order == "desc":
+                query = query.order_by(desc(column))
+            else:
+                query = query.order_by(column)
+        else:
+            query = query.order_by(desc(User.id))
+        return query.offset(offset).limit(size).all()
         
     def get_user_by_email(self,user_email:EmailStr,session:Session)->User | None:
         return  session.query(User).filter(User.email == user_email).first()

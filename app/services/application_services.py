@@ -8,7 +8,6 @@ from app.core.errors import (
     RegistrationClosed,
     ApplicationNotExists,
     ProfileNotCompleted,
-    OlympiadNotExists
 )
 from sqlalchemy.exc import IntegrityError
 from app.services.olympiad_services import OlympiadServices
@@ -16,6 +15,7 @@ from datetime import datetime
 from app.schemas.application_schemas import ApplicationUpdateStatusModel
 from typing import List
 from app.core.errors import ApplicationAlreadyReviewed
+from sqlalchemy import desc
 
 olympiad_services = OlympiadServices()
 
@@ -70,14 +70,42 @@ class ApplicationServices:
             raise ApplicationNotExists()
         return application
 
-    def get_my_applications(self, user: User, offset:int, size:int, session: Session) -> List[Application]:
+    def get_my_applications(
+        self, user: User, offset: int, size: int, session: Session
+    ) -> List[Application]:
         applications = (
-            session.query(Application).filter(Application.user_id == user.id).offset(offset).limit(size).all()
+            session.query(Application)
+            .filter(Application.user_id == user.id)
+            .offset(offset)
+            .limit(size)
+            .all()
         )
         return applications
 
-    def get_all_applications(self,offset:int, size:int, session: Session) -> List[Application]:
-        applications = session.query(Application).offset(offset).limit(size).all()
+    def get_all_applications(
+        self,
+        offset: int,
+        size: int,
+        session: Session,
+        order: str,
+        status: ApplicationStatus | None = None,
+        olympiad_id: int | None = None,
+        sort_by: str | None = None,
+    ) -> List[Application]:
+        query = session.query(Application)
+        if olympiad_id:
+            query = query.filter(Application.olympiad_id == olympiad_id)
+        if status:
+            query = query.filter(Application.status == status)
+        if sort_by:
+            column = getattr(Application, sort_by)
+            if order == "desc":
+                query = query.order_by(desc(column))
+            else:
+                query = query.order_by(column)
+        else:
+            query = query.order_by(desc(Application.id))
+        applications = query.offset(offset).limit(size).all()
         return applications
 
     def get_application_by_id(
@@ -104,17 +132,7 @@ class ApplicationServices:
             session.commit()
             session.refresh(application)
             return application
-            
+
         except Exception:
             session.rollback()
             raise
-    
-    def get_applications_by_olympiad(self,olympiad_id:int,offset:int, size:int,session:Session)->List[Application]:
-        olympiad_services.get_olympiad(olympiad_id,session) 
-        applications = session.query(Application).filter(Application.olympiad_id == olympiad_id).offset(offset).limit(size).all()
-        return applications
-        
-        
-    def get_pending_applications(self,offset:int, size:int,session:Session)->List[Application]:
-        applications = session.query(Application).filter(Application.status == ApplicationStatus.PENDING).offset(offset).limit(size).all()
-        return applications

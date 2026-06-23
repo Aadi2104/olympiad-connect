@@ -83,3 +83,9 @@ class SuperAdminModificationNotAllowed(OlympiadException):
 
 class UserStatusConflict(OlympiadException):
     pass
+
+class InvalidSortField(OlympiadException):
+    pass
+
+class InvalidSortOrder(OlympiadException):
+    pass

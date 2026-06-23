@@ -5,7 +5,7 @@ from sqlalchemy.orm.session import Session
 from app.services.user_services import UserServices
 from app.models.user_model import User ,UserRole
 from app.core.dependencies import get_current_user,RoleChecker
-from typing import List
+from typing import List, Literal
 
 
 
@@ -15,11 +15,11 @@ role_checker= RoleChecker([UserRole.STUDENT,UserRole.ADMIN,UserRole.SUPER_ADMIN]
 admin_role_checker = RoleChecker([UserRole.SUPER_ADMIN])
 
 @user_router.post("/signup",response_model=MessageResponseModel,status_code=status.HTTP_202_ACCEPTED)
-def initiate_user(user_data:UserCreateModel,bg_tasks:BackgroundTasks,session:Session=Depends(get_db)):
+def signup_user(user_data:UserCreateModel,bg_tasks:BackgroundTasks,session:Session=Depends(get_db)):
     return  user_services.initiate_signup(user_data,bg_tasks,session)
 
-@user_router.post("/verify-signup/{token}",response_model=UserResponseModel,status_code=status.HTTP_201_CREATED)
-def verify_signup(otp_data:UserVerifyModel,token:str,session:Session=Depends(get_db)):
+@user_router.post("/verify-email/{token}",response_model=UserResponseModel,status_code=status.HTTP_201_CREATED)
+def verify_email(otp_data:UserVerifyModel,token:str,session:Session=Depends(get_db)):
     return user_services.verify_user(otp_data,token,session)
     
     
@@ -32,9 +32,18 @@ def get_me(user:User=Depends(get_current_user)):
     return user
 
 
-@user_router.get("/get-all",response_model=List[UserResponseModel],status_code=status.HTTP_200_OK,dependencies=[Depends(admin_role_checker)])
-def get_all_users(offset:int = Query(0,ge=0), size:int = Query(10,ge=1,le=100),session:Session=Depends(get_db),):
-    return user_services.get_all_users(offset,size,session)
+@user_router.get("",response_model=List[UserResponseModel],status_code=status.HTTP_200_OK,dependencies=[Depends(admin_role_checker)])
+def get_all_users(
+    offset:int = Query(0,ge=0, description="Number of records to skip"),
+    size:int = Query(10,ge=1,le=100, description="Number of records to return"),
+    session:Session=Depends(get_db),
+    order: Literal["asc","desc"] = Query("asc", description="Sort order"),
+    email: str | None = Query(None, description="Filter users by email"),
+    role: UserRole | None = Query(None, description="Filter users by role"),
+    is_active : bool | None = Query(None, description="Filter users by active status"),
+    sort_by : Literal["email","role", "created_at"] | None = Query(None , description="Field used for sorting")
+                ):
+    return user_services.get_all_users(offset = offset,size = size,session = session ,order=order, email=email , is_active=is_active, role=role, sort_by=sort_by)
 
 @user_router.post("/forgot-password",response_model=MessageResponseModel,status_code=status.HTTP_200_OK)
 def request_password_reset(email_data:UserForgotPasswordModel,bg_tasks:BackgroundTasks,session:Session=Depends(get_db)):
@@ -63,6 +72,3 @@ def activate_user(user_data:UserManagementModel,session:Session=Depends(get_db))
 def deactivate_user(user_data:UserManagementModel,session:Session=Depends(get_db)):
     return user_services.deactivate_user(user_data,session)
 
-@user_router.get("/get-all-admins",response_model=List[UserResponseModel],status_code=status.HTTP_200_OK,dependencies=[Depends(admin_role_checker)])
-def get_all_admins(offset:int = Query(0,ge=0),size:int = Query(10,ge=1,le=100),session:Session=Depends(get_db),):
-    return user_services.get_all_admins(offset,size,session)

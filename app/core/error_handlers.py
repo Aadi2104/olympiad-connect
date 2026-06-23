@@ -27,7 +27,9 @@ from app.core.errors import (
     InvalidPassword,
     UserAlreadyHasRole,
     SuperAdminModificationNotAllowed,
-    UserStatusConflict
+    UserStatusConflict,
+    InvalidSortField,
+    InvalidSortOrder
 )
 
 
@@ -206,6 +208,18 @@ def user_status_conflict_handler(request:Request, exc:UserStatusConflict):
             "detail":str(exc)
         }
     )
+    
+def invalid_sort_field_handler(request:Request , exc:InvalidSortField):
+    return JSONResponse(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        content={"detail":"Invalid sort field"}
+    )
+    
+def invalid_sort_order_handler(request:Request, exc: InvalidSortOrder):
+    return JSONResponse(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        content={"detail" : "Sort order must be 'asc' or 'desc' "}
+    )
 
 def register_all_errors(app: FastAPI):
     app.add_exception_handler(UserAlreadyExists, user_already_exists_handler)
@@ -263,4 +277,6 @@ def register_all_errors(app: FastAPI):
     
     app.add_exception_handler(UserStatusConflict,user_status_conflict_handler)
     
+    app.add_exception_handler(InvalidSortField, invalid_sort_field_handler)
     
+    app.add_exception_handler(InvalidSortField, invalid_sort_order_handler)

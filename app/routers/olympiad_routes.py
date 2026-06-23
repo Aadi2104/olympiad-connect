@@ -10,19 +10,19 @@ from app.schemas.olympiad_schemas import (
 from sqlalchemy.orm.session import Session
 from app.models.user_model import User, UserRole
 from app.services.olympiad_services import OlympiadServices
-from typing import List
+from typing import List, Literal
 
-role_checker = RoleChecker([UserRole.ADMIN, UserRole.SUPER_ADMIN])
+require_admin_or_super_admin = RoleChecker([UserRole.ADMIN, UserRole.SUPER_ADMIN])
 olympiad_services = OlympiadServices()
 
 olympiad_router = APIRouter()
 
 
 @olympiad_router.post(
-    "/create",
+    "",
     response_model=OlympiadResponseModel,
     status_code=status.HTTP_201_CREATED,
-    dependencies=[Depends(role_checker)],
+    dependencies=[Depends(require_admin_or_super_admin)],
 )
 def create_olympiad(
     olympiad_data: OlympiadCreateModel,
@@ -33,34 +33,47 @@ def create_olympiad(
 
 
 @olympiad_router.get(
-    "/get/{olympiad_id}",
+    "/{olympiad_id}",
     response_model=OlympiadResponseModel,
     status_code=status.HTTP_200_OK,
-    dependencies=[Depends(role_checker)],
 )
-def get_olympiad_by_id(olympiad_id: int, session: Session = Depends(get_db)):
+def get_olympiad(olympiad_id: int, session: Session = Depends(get_db)):
     return olympiad_services.get_olympiad_by_id(olympiad_id, session)
 
 
 @olympiad_router.get(
-    "/get-all",
-    response_model=List[OlympiadResponseModel],
-    status_code=status.HTTP_200_OK,
-    dependencies=[Depends(role_checker)],
+    "", response_model=List[OlympiadResponseModel], status_code=status.HTTP_200_OK
 )
 def get_all_olympiads(
-    offset: int = Query(0, ge=0),
-    size: int = Query(10, ge=1, le=100),
+    offset: int = Query(0, ge=0, description="Number of records to skip"),
+    size: int = Query(10, ge=1, le=100, description="Number of records to return"),
+    title: str | None = Query(None, description="Filter olympiads by title"),
+    is_active: bool | None = Query(None, description="Filter by active status"),
+    sort_by: (
+        Literal[
+            "title", "created_at", "registration_start", "registration_end", "exam_date"
+        ]
+        | None
+    ) = Query(None, description="Field used for sorting"),
+    order: Literal["asc", "desc"] = Query("asc", description="Sort order"),
     session: Session = Depends(get_db),
 ):
-    return olympiad_services.get_all_olympiads(offset, size, session)
+    return olympiad_services.get_all_olympiads(
+        offset=offset,
+        size=size,
+        session=session,
+        order=order,
+        title=title,
+        is_active=is_active,
+        sort_by=sort_by,
+    )
 
 
 @olympiad_router.patch(
-    "/update/{olympiad_id}",
+    "/{olympiad_id}",
     response_model=OlympiadResponseModel,
     status_code=status.HTTP_200_OK,
-    dependencies=[Depends(role_checker)],
+    dependencies=[Depends(require_admin_or_super_admin)],
 )
 def update_olympiad(
     olympiad_data: OlympiadUpdateModel,
@@ -70,21 +83,21 @@ def update_olympiad(
     return olympiad_services.update_olympiad(olympiad_id, olympiad_data, session)
 
 
-@olympiad_router.delete(
-    "/deactivate/{olympiad_id}",
+@olympiad_router.patch(
+    "/{olympiad_id}/deactivate",
     response_model=OlympiadDeleteResponseModel,
     status_code=status.HTTP_200_OK,
-    dependencies=[Depends(role_checker)],
+    dependencies=[Depends(require_admin_or_super_admin)],
 )
 def deactivate_olympiad(olympiad_id: int, session: Session = Depends(get_db)):
     return olympiad_services.deactivate_olympiad(olympiad_id, session)
 
 
 @olympiad_router.patch(
-    "/reactivate/{olympiad_id}",
+    "/{olympiad_id}/activate",
     response_model=OlympiadResponseModel,
     status_code=status.HTTP_200_OK,
-    dependencies=[Depends(role_checker)],
+    dependencies=[Depends(require_admin_or_super_admin)],
 )
-def reactivate_olympiad(olympiad_id: int, session: Session = Depends(get_db)):
+def activate_olympiad(olympiad_id: int, session: Session = Depends(get_db)):
     return olympiad_services.reactivate_olympiad(olympiad_id, session)
