@@ -512,7 +512,7 @@ MAIL_SSL_TLS=
 > Interactive API documentation for testing and exploring endpoints.
 
 <!-- Add Screenshot -->
-!![Swagger UI](assets/screenshots/swagger-overview.png)
+![Swagger UI](assets/screenshots/swagger-overview.png)
 
 
 ---
