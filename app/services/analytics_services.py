@@ -1,9 +1,12 @@
-from app.schemas.analytics_schema import DashboardAnalyticsResponseModel
+from sqlalchemy.orm.session import Session
+
 from app.models.application_model import Application, ApplicationStatus
 from app.models.olympiad_model import Olympiad
 from app.models.student_profile_model import StudentProfile
 from app.models.user_model import User, UserRole
-from sqlalchemy.orm.session import Session
+from app.schemas.analytics_schemas import DashboardAnalyticsResponseModel
+
+
 class AnalyticsServices:
     
     def get_dashboard_metrics(self, session:Session) -> DashboardAnalyticsResponseModel:

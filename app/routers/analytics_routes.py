@@ -1,5 +1,5 @@
 from fastapi import APIRouter, status, Depends
-from app.schemas.analytics_schema import DashboardAnalyticsResponseModel
+from app.schemas.analytics_schemas import DashboardAnalyticsResponseModel
 from app.core.dependencies import RoleChecker
 from app.db.session import get_db
 from app.models.user_model import UserRole

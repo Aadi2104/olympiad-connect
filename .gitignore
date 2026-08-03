@@ -1,19 +1,37 @@
+# Virtual Environment
 venv/
+.venv/
 
+# Environment Variables
 .env
 
+# Python Cache
 __pycache__/
+*.py[cod]
+*$py.class
 
-*.pyc
-
-.DS_Store
-
+# Pytest
 .pytest_cache/
 
+# VS Code / JetBrains
+.vscode/
 .idea/
 
-.vscode/
+# macOS
+.DS_Store
 
+# Logs
+*.log
+
+# Coverage
+.coverage
+htmlcov/
+
+# Python Packaging
+*.egg-info/
+dist/
+build/
+
+# Temporary Files
 tempCodeRunnerFile.py
-
 rough.html

@@ -9,14 +9,16 @@ class DashboardAnalyticsResponseModel(BaseModel):
 
     total_olympiads: int
     active_olympiads: int
-    
+
     total_applications: int
     pending_applications: int
     approved_applications: int
     rejected_applications: int
-    
+
     approval_rate: float
-    
+
     completed_profiles: int
-    
-    model_config = ConfigDict(from_attributes=True)
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
