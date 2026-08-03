@@ -503,7 +503,7 @@ MAIL_SSL_TLS=
 > Modular folder structure following a layered architecture.
 
 <!-- Add Screenshot -->
-![Project Structure](assets/project-structure.png)
+![Project Structure](assets/screenshots/project-structure.png)
 
 ---
 
@@ -512,7 +512,8 @@ MAIL_SSL_TLS=
 > Interactive API documentation for testing and exploring endpoints.
 
 <!-- Add Screenshot -->
-![Swagger UI](assets/swagger-ui.png)
+!![Swagger UI](assets/screenshots/swagger-overview.png)
+
 
 ---
 
@@ -521,7 +522,7 @@ MAIL_SSL_TLS=
 > Clean and detailed API reference generated automatically by FastAPI.
 
 <!-- Add Screenshot -->
-![ReDoc](assets/redoc.png)
+![ReDoc](assets/screenshots/redoc-overview.png)
 
 ---
 
@@ -530,8 +531,7 @@ MAIL_SSL_TLS=
 > Example analytics response showcasing dashboard metrics.
 
 <!-- Add Screenshot -->
-![Analytics](assets/analytics.png)
-
+![Analytics](assets/screenshots/analytics-dashboard.png)
 ---
 
 # 📈 Project Statistics
