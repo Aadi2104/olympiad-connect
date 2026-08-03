@@ -1,13 +1,23 @@
-from fastapi import APIRouter,status,Depends, BackgroundTasks, Query
-from app.schemas.user_schemas import UserCreateModel,UserLoginModel,UserResponseModel, UserVerifyModel, MessageResponseModel, UserForgotPasswordModel, UserResetPasswordModel, UserManagementModel, UserLoginResponseModel
-from app.db.session import get_db
+from typing import Literal
+
+from fastapi import APIRouter, BackgroundTasks, Depends, Query, status
 from sqlalchemy.orm.session import Session
+
+from app.core.dependencies import RoleChecker, get_current_user
+from app.db.session import get_db
+from app.models.user_model import User, UserRole
+from app.schemas.user_schemas import (
+    MessageResponseModel,
+    UserCreateModel,
+    UserForgotPasswordModel,
+    UserLoginModel,
+    UserLoginResponseModel,
+    UserManagementModel,
+    UserResetPasswordModel,
+    UserResponseModel,
+    UserVerifyModel,
+)
 from app.services.user_services import UserServices
-from app.models.user_model import User ,UserRole
-from app.core.dependencies import get_current_user,RoleChecker
-from typing import List, Literal
-
-
 
 user_router=APIRouter()
 user_services=UserServices()
@@ -32,7 +42,7 @@ def get_me(user:User=Depends(get_current_user)):
     return user
 
 
-@user_router.get("",response_model=List[UserResponseModel],status_code=status.HTTP_200_OK,dependencies=[Depends(admin_role_checker)])
+@user_router.get("",response_model=list[UserResponseModel],status_code=status.HTTP_200_OK,dependencies=[Depends(admin_role_checker)])
 def get_all_users(
     offset:int = Query(0,ge=0, description="Number of records to skip"),
     size:int = Query(10,ge=1,le=100, description="Number of records to return"),

@@ -1,14 +1,11 @@
 from fastapi import FastAPI
-from .db.session import get_db
-from .core.config import settings
+
 from app.core.error_handlers import register_all_errors
-from app.routers.user_routes import user_router
-from app.routers.olympiad_routes import olympiad_router
-from app.routers.application_routes import application_router
-from app.routers.student_profile_routes import student_profile_router
 from app.routers.analytics_routes import analytics_router
-
-
+from app.routers.application_routes import application_router
+from app.routers.olympiad_routes import olympiad_router
+from app.routers.student_profile_routes import student_profile_router
+from app.routers.user_routes import user_router
 
 app= FastAPI()
 
