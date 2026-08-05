@@ -1,8 +1,11 @@
-from app.db.session import Base
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import ForeignKey, Enum as SqlEnum, DateTime, func
 from datetime import date, datetime
 from enum import Enum
+
+from sqlalchemy import DateTime, ForeignKey, func
+from sqlalchemy import Enum as SqlEnum
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.db.session import Base
 
 
 class StudentGender(str, Enum):

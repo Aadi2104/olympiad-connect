@@ -1,13 +1,11 @@
-from app.db.session import Base
-from sqlalchemy.orm import Mapped,mapped_column,relationship
-from sqlalchemy import ForeignKey,func,DateTime , Enum as SqlEnum, UniqueConstraint
-from enum import Enum
 from datetime import datetime
+from enum import Enum
 
-from app.models.olympiad_model import Olympiad
-from app.models.user_model import User
-# from app.models.user_model import User
-# from app.models.olympiad_model import Olympiad
+from sqlalchemy import DateTime, ForeignKey, UniqueConstraint, func
+from sqlalchemy import Enum as SqlEnum
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.db.session import Base
 
 
 class ApplicationStatus(Enum):

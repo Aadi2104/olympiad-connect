@@ -7,10 +7,6 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
 from app.db.session import Base
-from app.models.application_model import Application
-from app.models.olympiad_model import Olympiad
-from app.models.refresh_token_model import RefreshToken
-from app.models.student_profile_model import StudentProfile
 
 
 class UserRole(str , Enum):

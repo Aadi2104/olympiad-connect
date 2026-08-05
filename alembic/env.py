@@ -1,16 +1,15 @@
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
+from sqlalchemy import engine_from_config, pool
 
 from alembic import context
-
-from app.db.session import Base
 from app.core.config import settings
-from app.models.user_model import User
-from app.models.olympiad_model import Olympiad
+from app.db.session import Base
 from app.models.application_model import Application
+from app.models.olympiad_model import Olympiad
+from app.models.refresh_token_model import RefreshToken
 from app.models.student_profile_model import StudentProfile
+from app.models.user_model import User
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

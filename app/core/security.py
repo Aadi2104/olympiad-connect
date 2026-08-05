@@ -1,4 +1,5 @@
 import secrets
+import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
@@ -26,9 +27,14 @@ def hash_password(password: str) -> str:
     return passwd_context.hash(password)
 
 
-def verify_password(password: str, hash: str) -> bool:
-    return passwd_context.verify(password, hash)
+def verify_password(password: str, password_hash: str) -> bool:
+    return passwd_context.verify(password, password_hash)
 
+def hash_refresh_token(refresh_token: str) -> str:
+    return passwd_context.hash(refresh_token)
+
+def verify_refresh_token(refresh_token : str, refresh_token_hash:str) -> bool:
+    return passwd_context.verify(refresh_token ,refresh_token_hash)
 
 def create_access_token(user: User) -> str:
     payload_data = {
@@ -63,10 +69,11 @@ def decode_access_token(token: str) -> dict[str, Any]:
         raise InvalidToken("Invalid access token")
 
 
-def create_refresh_token(user: User) -> str:
-
+def create_refresh_token(user: User) ->tuple[str ,str]:
+    jti = str(uuid.uuid4())
     payload_data = {
         "sub": str(user.id),
+        "jti":jti,
         "type": "refresh",
         "iat": datetime.now(UTC),
         "exp": datetime.now(UTC) + timedelta(days=settings.REFRESH_TOKEN_EXPIRY_DAYS),
@@ -77,7 +84,7 @@ def create_refresh_token(user: User) -> str:
     token = jwt.encode(
         payload=payload_data, key=settings.SECRET_KEY, algorithm=settings.ALGORITHM
     )
-    return token
+    return token , jti
 
 
 def decode_refresh_token(token: str) -> dict[str , Any]:

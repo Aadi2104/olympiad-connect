@@ -1,13 +1,47 @@
-from app.schemas.user_schemas import UserCreateModel,UserLoginModel, UserVerifyModel, UserForgotPasswordModel, UserResetPasswordModel, UserManagementModel, UserLoginResponseModel , MessageResponseModel
-from sqlalchemy.orm.session import Session
-from app.models.user_model import User,UserRole
-from app.core.errors import UserAlreadyExists,UserNotExist,InvalidCredentials, OTPRequired, InvalidOTP, InvalidPassword , UserAlreadyHasRole, SuperAdminModificationNotAllowed, UserStatusConflict
-from app.core.security import (hash_password,verify_password,create_access_token,generate_otp,generate_signup_token,verify_signup_token,generate_reset_password_token,verify_reset_password_token)
-from app.services.mail_services import Mail
-from pydantic import EmailStr
 from fastapi import BackgroundTasks
-from typing import List
+from pydantic import EmailStr
 from sqlalchemy import desc
+from sqlalchemy.orm.session import Session
+
+from app.core.errors import (
+    InvalidCredentials,
+    InvalidOTP,
+    InvalidPassword,
+    OTPRequired,
+    SuperAdminModificationNotAllowed,
+    UserAlreadyExists,
+    UserAlreadyHasRole,
+    UserNotExist,
+    UserStatusConflict,
+)
+from app.core.security import (
+    create_access_token,
+    create_refresh_token,
+    hash_refresh_token,
+    generate_otp,
+    generate_reset_password_token,
+    generate_signup_token,
+    hash_password,
+    verify_password,
+    verify_reset_password_token,
+    verify_signup_token,
+)
+from app.models.refresh_token_model import RefreshToken
+from app.models.user_model import User, UserRole
+from app.schemas.user_schemas import (
+    MessageResponseModel,
+    UserCreateModel,
+    UserForgotPasswordModel,
+    UserLoginModel,
+    UserLoginResponseModel,
+    UserManagementModel,
+    UserResetPasswordModel,
+    UserVerifyModel,
+)
+from datetime import UTC, datetime, timedelta
+from app.core.config import settings
+from app.services.mail_services import Mail
+
 
 mail_service = Mail()
 
@@ -20,7 +54,7 @@ class UserServices:
         
     
     def get_all_users(self,offset:int,size:int,session:Session, order:str, email : str | None = None, role : UserRole | None =None , is_active: bool | None = None, sort_by: str | None = None
-)->List[User]:
+)->list[User]:
         
         query = session.query(User)
         if email:
@@ -56,12 +90,12 @@ class UserServices:
                 raise UserAlreadyExists()
             
             otp = generate_otp()
-            data = {
+            signup_data = {
                 "email":user_email,
                 "password_hash":hash_password(user_password),
                 "otp":otp
             }
-            token = generate_signup_token(data)
+            token = generate_signup_token(signup_data)
             
             mail_service.send_signup_mail(token,otp,[user_email],bg_tasks)
             
@@ -102,9 +136,24 @@ class UserServices:
         if not verify_password(user_password,user.password_hash):
             raise InvalidCredentials()
         
-        token = create_access_token(user)
+        access_token = create_access_token(user)
+        refresh_token , jti= create_refresh_token(user)
+        
+        refresh_token_record = RefreshToken(
+            user_id = user.id,
+            jti = jti,
+            token_hash =  hash_refresh_token(refresh_token),
+            expires_at = datetime.now(UTC) + timedelta(days=settings.REFRESH_TOKEN_EXPIRY_DAYS)
+        )
+        try: 
+            session.add(refresh_token_record)
+            session.commit()
+        except Exception:
+            session.rollback()
+            raise
         return {
-            "access_token": token
+            "access_token": access_token,
+            "refresh_token": refresh_token
         }
 
     
@@ -228,7 +277,7 @@ class UserServices:
             session.rollback()
             raise
         
-    def get_all_admins(self,offset:int,size:int,session:Session) -> List[User]:
+    def get_all_admins(self,offset:int,size:int,session:Session) -> list[User]:
         return session.query(User).filter(User.is_active.is_(True),User.role == UserRole.ADMIN).offset(offset).limit(size).all()
         
             
