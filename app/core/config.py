@@ -1,12 +1,15 @@
-from pydantic_settings import BaseSettings,SettingsConfigDict
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
 
 class Settings(BaseSettings):
     DATABASE_URL : str
     SECRET_KEY : str
     ALGORITHM : str
     ACCESS_TOKEN_EXPIRY_MINUTES : int
+    REFRESH_TOKEN_EXPIRY_DAYS : int
     SIGNUP_TOKEN_EXPIRY_MINUTES : int
     RESET_PASSWORD_TOKEN_EXPIRY_MINUTES:int
+    JWT_ISSUER:str
     MAIL_USERNAME:str
     MAIL_PASSWORD:str
     MAIL_FROM_NAME:str
@@ -15,6 +18,7 @@ class Settings(BaseSettings):
     MAIL_SERVER:str
     MAIL_STARTTLS:bool
     MAIL_SSL_TLS:bool
+
     
     model_config = SettingsConfigDict(
         env_file=".env",

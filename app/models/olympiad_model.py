@@ -1,13 +1,14 @@
-from app.db.session import Base
-from sqlalchemy.orm import Mapped, mapped_column , relationship
-from enum import Enum
-from sqlalchemy import DateTime,ForeignKey,Enum as SqlEnum
 from datetime import datetime
-from typing import List
+
+from sqlalchemy import DateTime, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
+from app.db.session import Base
+from app.models.application_model import Application
+from app.models.user_model import User
 
-   
+
 class Olympiad(Base):
     
     __tablename__="olympiads"
@@ -36,5 +37,5 @@ class Olympiad(Base):
     
     creator:Mapped["User"]=relationship(back_populates="created_olympiads")
     
-    applications:Mapped[List["Application"]]=relationship(back_populates="olympiad")
+    applications:Mapped[list["Application"]]=relationship(back_populates="olympiad")
     

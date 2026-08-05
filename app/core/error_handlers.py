@@ -1,38 +1,37 @@
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
+
 from app.core.errors import (
-    UserAlreadyExists,
-    UserNotExist,
-    InvalidCredentials,
-    InvalidToken,
-    TokenNotFound,
-    NotAuthorized,
-    InvalidDateConfiguration,
-    OlympiadNotExists,
-    OlympiadAlreadyInactive,
     ApplicationAlreadyExists,
-    OlympiadInactive,
-    RegistrationClosed,
-    RegistrationNotStarted,
+    ApplicationAlreadyReviewed,
     ApplicationNotExists,
-    ProfileNotCompleted,
+    InvalidCredentials,
+    InvalidDateConfiguration,
+    InvalidOTP,
+    InvalidPassword,
+    InvalidSortField,
+    InvalidSortOrder,
+    InvalidToken,
+    NotAuthorized,
+    OlympiadAlreadyActive,
+    OlympiadAlreadyInactive,
+    OlympiadInactive,
+    OlympiadNotExists,
+    OTPRequired,
     ProfileAlreadyExists,
     ProfileDataAlreadyExists,
+    ProfileNotCompleted,
     ProfileNotExists,
-    ApplicationAlreadyReviewed,
-    OlympiadAlreadyActive,
-    TokenExpired,
-    InvalidOTP,
-    OTPRequired,
-    InvalidPassword,
-    UserAlreadyHasRole,
+    RegistrationClosed,
+    RegistrationNotStarted,
     SuperAdminModificationNotAllowed,
+    TokenExpired,
+    TokenNotFound,
+    UserAlreadyExists,
+    UserAlreadyHasRole,
+    UserNotExist,
     UserStatusConflict,
-    InvalidSortField,
-    InvalidSortOrder
 )
-
-
 
 
 def user_already_exists_handler(request: Request, exc: UserAlreadyExists):
@@ -167,7 +166,7 @@ def olympiad_already_active_handler(request:Request, exc:OlympiadAlreadyActive):
     
 def token_expired_handler(request:Request, exc:TokenExpired):
     return JSONResponse(
-        status_code=status.HTTP_400_BAD_REQUEST,
+        status_code=status.HTTP_401_UNAUTHORIZED,
         content={"detail":str(exc)}
     )
     
@@ -220,6 +219,7 @@ def invalid_sort_order_handler(request:Request, exc: InvalidSortOrder):
         status_code=status.HTTP_400_BAD_REQUEST,
         content={"detail" : "Sort order must be 'asc' or 'desc' "}
     )
+
 
 def register_all_errors(app: FastAPI):
     app.add_exception_handler(UserAlreadyExists, user_already_exists_handler)
@@ -279,4 +279,5 @@ def register_all_errors(app: FastAPI):
     
     app.add_exception_handler(InvalidSortField, invalid_sort_field_handler)
     
-    app.add_exception_handler(InvalidSortField, invalid_sort_order_handler)
+    app.add_exception_handler(InvalidSortOrder, invalid_sort_order_handler)
+    

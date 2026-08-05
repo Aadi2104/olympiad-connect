@@ -1,10 +1,17 @@
-from app.db.session import Base
-from sqlalchemy.orm import Mapped, mapped_column , relationship
-from enum import Enum
-from sqlalchemy import DateTime,ForeignKey,Enum as SqlEnum
 from datetime import datetime
-from typing import List
+from enum import Enum
+
+from sqlalchemy import DateTime
+from sqlalchemy import Enum as SqlEnum
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
+
+from app.db.session import Base
+from app.models.application_model import Application
+from app.models.olympiad_model import Olympiad
+from app.models.refresh_token_model import RefreshToken
+from app.models.student_profile_model import StudentProfile
+
 
 class UserRole(str , Enum):
     ADMIN = "admin"
@@ -34,8 +41,10 @@ class User(Base):
 
     updated_at:Mapped[datetime] = mapped_column(DateTime,server_default=func.now(),onupdate=func.now())
     
-    created_olympiads:Mapped[List["Olympiad"]] = relationship(back_populates="creator")
+    created_olympiads:Mapped[list["Olympiad"]] = relationship(back_populates="creator")
     
-    applications:Mapped[List["Application"]] = relationship(back_populates="user")
+    applications:Mapped[list["Application"]] = relationship(back_populates="user")
     
     student_profile:Mapped["StudentProfile"] = relationship(back_populates="user",uselist=False,cascade="all, delete-orphan")
+    
+    refresh_tokens:Mapped[list["RefreshToken"]] =  relationship(back_populates="user",cascade="all, delete-orphan")

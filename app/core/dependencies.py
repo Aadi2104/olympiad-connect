@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any
 
 import jwt
 from fastapi import Depends, Request
@@ -36,13 +36,13 @@ def get_current_user(
     token_data: dict[str, Any] = Depends(TokenBearer()),
     session: Session = Depends(get_db),
 ) -> User:
-    user_id = token_data.get("user_id")
+    user_id = int(token_data.get("sub"))
     user = user_services.get_user(user_id, session)
     return user
 
 
 class RoleChecker:
-    def __init__(self, allowed_roles: List[UserRole]):
+    def __init__(self, allowed_roles: list[UserRole]):
         self.allowed_roles = allowed_roles
 
     def __call__(self, user: User = Depends(get_current_user)) -> None:

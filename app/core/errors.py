@@ -89,3 +89,4 @@ class InvalidSortField(OlympiadException):
 
 class InvalidSortOrder(OlympiadException):
     pass
+

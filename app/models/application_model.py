@@ -3,6 +3,9 @@ from sqlalchemy.orm import Mapped,mapped_column,relationship
 from sqlalchemy import ForeignKey,func,DateTime , Enum as SqlEnum, UniqueConstraint
 from enum import Enum
 from datetime import datetime
+
+from app.models.olympiad_model import Olympiad
+from app.models.user_model import User
 # from app.models.user_model import User
 # from app.models.olympiad_model import Olympiad
 
