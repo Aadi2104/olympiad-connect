@@ -31,6 +31,9 @@ from app.core.errors import (
     UserAlreadyHasRole,
     UserNotExist,
     UserStatusConflict,
+    RefreshTokenRevoked,
+    RefreshTokenNotFound
+    
 )
 
 
@@ -220,6 +223,18 @@ def invalid_sort_order_handler(request:Request, exc: InvalidSortOrder):
         content={"detail" : "Sort order must be 'asc' or 'desc' "}
     )
 
+def refresh_token_revoked_handler(request:Request , exc:RefreshTokenRevoked):
+    return JSONResponse(
+        status_code= status.HTTP_401_UNAUTHORIZED,
+        content={"detail": "Refresh token has been expired"}
+    )
+
+def refresh_token_not_found_handler(request:Request , exc:RefreshTokenRevoked):
+    return JSONResponse(
+        status_code=status.HTTP_404_NOT_FOUND,
+        content={"detail" : "refresh token not found"}
+    )
+
 
 def register_all_errors(app: FastAPI):
     app.add_exception_handler(UserAlreadyExists, user_already_exists_handler)
@@ -280,4 +295,8 @@ def register_all_errors(app: FastAPI):
     app.add_exception_handler(InvalidSortField, invalid_sort_field_handler)
     
     app.add_exception_handler(InvalidSortOrder, invalid_sort_order_handler)
+    
+    app.add_exception_handler(RefreshTokenRevoked, refresh_token_revoked_handler)
+    
+    app.add_exception_handler(RefreshTokenNotFound, refresh_token_not_found_handler)
     

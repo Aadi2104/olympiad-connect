@@ -1,14 +1,14 @@
-from app.schemas.olympiad_schemas import OlympiadCreateModel, OlympiadUpdateModel
-from sqlalchemy.orm.session import Session 
 from sqlalchemy import desc
+from sqlalchemy.orm.session import Session
+
+from app.core.errors import (
+    InvalidDateConfiguration,
+    OlympiadAlreadyActive,
+    OlympiadNotExists,
+)
 from app.models.olympiad_model import Olympiad
 from app.models.user_model import User
-from app.core.errors import (
-    OlympiadNotExists,
-    InvalidDateConfiguration,
-    OlympiadAlreadyActive
-)
-from typing import List
+from app.schemas.olympiad_schemas import OlympiadCreateModel, OlympiadUpdateModel
 
 
 class OlympiadServices:
@@ -49,7 +49,7 @@ class OlympiadServices:
     def get_all_olympiads(
         self, offset: int, size: int, session: Session,order : str,  title: str | None = None, is_active: bool | None = None,
         sort_by : str | None = None
-    ) -> List[Olympiad]:
+    ) -> list[Olympiad]:
         
         query = session.query(Olympiad)
         

@@ -33,9 +33,9 @@ class User(Base):
         default=True
     )
 
-    created_at:Mapped[datetime] = mapped_column(DateTime,server_default=func.now())
+    created_at:Mapped[datetime] = mapped_column(DateTime(timezone=True),server_default=func.now())
 
-    updated_at:Mapped[datetime] = mapped_column(DateTime,server_default=func.now(),onupdate=func.now())
+    updated_at:Mapped[datetime] = mapped_column(DateTime(timezone=True),server_default=func.now(),onupdate=func.now())
     
     created_olympiads:Mapped[list["Olympiad"]] = relationship(back_populates="creator")
     

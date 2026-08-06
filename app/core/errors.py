@@ -90,3 +90,8 @@ class InvalidSortField(OlympiadException):
 class InvalidSortOrder(OlympiadException):
     pass
 
+class RefreshTokenRevoked(OlympiadException):
+    pass
+
+class RefreshTokenNotFound(OlympiadException):
+    pass

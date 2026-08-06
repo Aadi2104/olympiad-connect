@@ -16,6 +16,7 @@ from app.schemas.user_schemas import (
     UserResetPasswordModel,
     UserResponseModel,
     UserVerifyModel,
+    UserLogoutModel
 )
 from app.services.user_services import UserServices
 
@@ -82,3 +83,6 @@ def activate_user(user_data:UserManagementModel,session:Session=Depends(get_db))
 def deactivate_user(user_data:UserManagementModel,session:Session=Depends(get_db)):
     return user_services.deactivate_user(user_data,session)
 
+@user_router.post("/logout" , response_model = MessageResponseModel , status_code = status.HTTP_200_OK )
+def logout_user(logout_data: UserLogoutModel,session: Session = Depends(get_db)):
+    return user_services.logout_user(logout_data , session)

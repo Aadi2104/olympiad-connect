@@ -1,8 +1,11 @@
+from datetime import UTC, datetime, timedelta
+
 from fastapi import BackgroundTasks
 from pydantic import EmailStr
 from sqlalchemy import desc
 from sqlalchemy.orm.session import Session
 
+from app.core.config import settings
 from app.core.errors import (
     InvalidCredentials,
     InvalidOTP,
@@ -13,18 +16,25 @@ from app.core.errors import (
     UserAlreadyHasRole,
     UserNotExist,
     UserStatusConflict,
+    InvalidToken,
+    RefreshTokenNotFound,
+    RefreshTokenRevoked,
+    TokenExpired
 )
 from app.core.security import (
     create_access_token,
     create_refresh_token,
-    hash_refresh_token,
+    decode_refresh_token,
     generate_otp,
     generate_reset_password_token,
     generate_signup_token,
     hash_password,
+    hash_refresh_token,
     verify_password,
     verify_reset_password_token,
     verify_signup_token,
+    verify_refresh_token,
+    
 )
 from app.models.refresh_token_model import RefreshToken
 from app.models.user_model import User, UserRole
@@ -37,11 +47,9 @@ from app.schemas.user_schemas import (
     UserManagementModel,
     UserResetPasswordModel,
     UserVerifyModel,
+    UserLogoutModel
 )
-from datetime import UTC, datetime, timedelta
-from app.core.config import settings
 from app.services.mail_services import Mail
-
 
 mail_service = Mail()
 
@@ -106,18 +114,18 @@ class UserServices:
             
     def verify_user(self,otp_data:UserVerifyModel,token:str,session:Session)->User:
         try:
-            data = verify_signup_token(token)
+            signup_data = verify_signup_token(token)
             if not otp_data.otp:
                 raise OTPRequired()
-            if data["otp"] != otp_data.otp:
+            if signup_data["otp"] != otp_data.otp:
                 raise InvalidOTP()
-            user = self.get_user_by_email(data["email"],session)
+            user = self.get_user_by_email(signup_data["email"],session)
             if user:
                 raise UserAlreadyExists()
             
             new_user = User(
-                email=data["email"],
-                password_hash=data["password_hash"]
+                email=signup_data["email"],
+                password_hash=signup_data["password_hash"]
             )
             session.add(new_user)
             session.commit()
@@ -156,6 +164,44 @@ class UserServices:
             "refresh_token": refresh_token
         }
 
+    def logout_user(self,logout_data : UserLogoutModel, session:Session) -> MessageResponseModel:
+        try:
+            refresh_token = logout_data.refresh_token
+            refresh_token_data = decode_refresh_token(refresh_token)
+            
+            refresh_token_jti = refresh_token_data["jti"]
+            
+            refresh_token_record = session.query(RefreshToken).filter(RefreshToken.jti == refresh_token_jti).first()
+            
+            if not refresh_token_record:
+                raise RefreshTokenNotFound()
+            
+            if refresh_token_record.is_revoked:
+                raise RefreshTokenRevoked()
+            
+            if refresh_token_record.expires_at < datetime.now():
+                raise TokenExpired("Refresh token has expired")
+            
+            refresh_token_hash = refresh_token_record.token_hash
+            
+            if not verify_refresh_token(refresh_token , refresh_token_hash):
+                raise InvalidToken("Invalid refresh token")
+            
+            refresh_token_record.is_revoked = True
+            
+            session.commit()
+            return {
+                "message" : "Logged out successfully"
+            }
+            
+        except Exception:
+            session.rollback()
+            raise
+        
+        
+        
+    
+    
     
     def request_password_reset(self,email_data:UserForgotPasswordModel,bg_tasks:BackgroundTasks,session:Session) -> MessageResponseModel:
         
@@ -165,8 +211,8 @@ class UserServices:
         self.ensure_user_exists(user_email,session)
         
         
-        data = {"email" : user_email}
-        token = generate_reset_password_token(data)
+        reset_password_data = {"email" : user_email}
+        token = generate_reset_password_token(reset_password_data)
         
         mail_service.send_reset_password_mail(token,[email_data.email],bg_tasks)
         
@@ -280,6 +326,6 @@ class UserServices:
     def get_all_admins(self,offset:int,size:int,session:Session) -> list[User]:
         return session.query(User).filter(User.is_active.is_(True),User.role == UserRole.ADMIN).offset(offset).limit(size).all()
         
-            
+    
             
         

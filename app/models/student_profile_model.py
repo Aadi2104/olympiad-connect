@@ -41,7 +41,7 @@ class StudentProfile(Base):
     phone_number: Mapped[str] = mapped_column(unique=True, index=True)
 
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, server_default=func.now(), onupdate=func.now()
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
 
     user: Mapped["User"] = relationship(back_populates="student_profile")

@@ -28,8 +28,8 @@ class Application(Base):
     user_id:Mapped[int]=mapped_column(ForeignKey("users.id"),nullable=False)
     olympiad_id:Mapped[int]=mapped_column(ForeignKey("olympiads.id"),nullable=False)
     status:Mapped[ApplicationStatus] = mapped_column(SqlEnum(ApplicationStatus),default=ApplicationStatus.PENDING)
-    created_at:Mapped[datetime]=mapped_column(DateTime,server_default=func.now())
-    updated_at:Mapped[datetime]=mapped_column(DateTime,server_default=func.now(),onupdate=func.now())
+    created_at:Mapped[datetime]=mapped_column(DateTime(timezone=True),server_default=func.now())
+    updated_at:Mapped[datetime]=mapped_column(DateTime(timezone=True),server_default=func.now(),onupdate=func.now())
     user:Mapped["User"]=relationship(back_populates="applications")
     olympiad:Mapped["Olympiad"]=relationship(back_populates="applications")
     

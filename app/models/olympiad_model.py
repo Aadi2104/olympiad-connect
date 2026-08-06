@@ -30,9 +30,9 @@ class Olympiad(Base):
 
     created_by_id:Mapped[int | None]=mapped_column(ForeignKey("users.id",ondelete="SET NULL"), nullable=True)
 
-    created_at:Mapped[datetime]=mapped_column(DateTime,server_default=func.now())
+    created_at:Mapped[datetime]=mapped_column(DateTime(timezone=True),server_default=func.now())
 
-    updated_at:Mapped[datetime]=mapped_column(DateTime,server_default=func.now(),onupdate=func.now())
+    updated_at:Mapped[datetime]=mapped_column(DateTime(timezone=True),server_default=func.now(),onupdate=func.now())
     
     creator:Mapped["User"]=relationship(back_populates="created_olympiads")
     

@@ -39,3 +39,6 @@ class UserManagementModel(BaseModel):
 class UserLoginResponseModel(BaseModel):
     access_token: str
     refresh_token: str
+    
+class UserLogoutModel(BaseModel):
+    refresh_token: str
