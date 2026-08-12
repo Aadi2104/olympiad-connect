@@ -95,3 +95,5 @@ class RefreshTokenRevoked(OlympiadException):
 
 class RefreshTokenNotFound(OlympiadException):
     pass
+class UserInactive(OlympiadException):
+    pass

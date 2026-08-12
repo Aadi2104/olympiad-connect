@@ -16,7 +16,8 @@ from app.schemas.user_schemas import (
     UserResetPasswordModel,
     UserResponseModel,
     UserVerifyModel,
-    UserLogoutModel
+    RefreshTokenModel,
+    
 )
 from app.services.user_services import UserServices
 
@@ -84,5 +85,9 @@ def deactivate_user(user_data:UserManagementModel,session:Session=Depends(get_db
     return user_services.deactivate_user(user_data,session)
 
 @user_router.post("/logout" , response_model = MessageResponseModel , status_code = status.HTTP_200_OK )
-def logout_user(logout_data: UserLogoutModel,session: Session = Depends(get_db)):
-    return user_services.logout_user(logout_data , session)
+def logout_user(refresh_token_data: RefreshTokenModel,session: Session = Depends(get_db)):
+    return user_services.logout_user(refresh_token_data , session)
+
+@user_router.post("/refresh",response_model=UserLoginResponseModel , status_code=status.HTTP_200_OK)
+def refresh_user_session(refresh_token_data: RefreshTokenModel,session:Session=Depends(get_db)):
+    return user_services.refresh_user_sessions(refresh_token_data,session)

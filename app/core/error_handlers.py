@@ -32,7 +32,8 @@ from app.core.errors import (
     UserNotExist,
     UserStatusConflict,
     RefreshTokenRevoked,
-    RefreshTokenNotFound
+    RefreshTokenNotFound,
+    UserInactive
     
 )
 
@@ -229,12 +230,17 @@ def refresh_token_revoked_handler(request:Request , exc:RefreshTokenRevoked):
         content={"detail": "Refresh token has been expired"}
     )
 
-def refresh_token_not_found_handler(request:Request , exc:RefreshTokenRevoked):
+def refresh_token_not_found_handler(request:Request , exc:RefreshTokenNotFound):
     return JSONResponse(
         status_code=status.HTTP_404_NOT_FOUND,
         content={"detail" : "refresh token not found"}
     )
 
+def user_inactive_handler(request:Request , exc:UserInactive):
+    return JSONResponse(
+        status_code=status.HTTP_403_FORBIDDEN,
+        content={"detail":"User is inactive"}
+    )
 
 def register_all_errors(app: FastAPI):
     app.add_exception_handler(UserAlreadyExists, user_already_exists_handler)
@@ -300,3 +306,4 @@ def register_all_errors(app: FastAPI):
     
     app.add_exception_handler(RefreshTokenNotFound, refresh_token_not_found_handler)
     
+    app.add_exception_handler(UserInactive , user_inactive_handler)
