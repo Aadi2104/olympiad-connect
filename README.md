@@ -12,7 +12,7 @@
 ![JWT](https://img.shields.io/badge/JWT-Authentication-success)
 ![Pydantic](https://img.shields.io/badge/Pydantic-Validation-blueviolet)
 
-🚀 **30+ REST APIs • JWT Authentication • HTTPBearer • RBAC • PostgreSQL • SQLAlchemy • Alembic**
+🚀 **30+ REST APIs • JWT • Refresh Tokens • HTTPBearer • RBAC • PostgreSQL • SQLAlchemy • Alembic**
 
 </div>
 
@@ -22,13 +22,13 @@
 
 Olympiad Connect is a **FastAPI-powered backend application** designed to simplify Olympiad management for students and administrators.
 
-Rather than being a simple CRUD application, this project focuses on applying **real-world backend engineering concepts** while learning FastAPI. It demonstrates authentication, authorization, modular architecture, database design, analytics, API documentation, and production-oriented backend practices.
+Rather than being a simple CRUD application, this project focuses on applying **real-world backend engineering concepts** while learning and improving with FastAPI. It demonstrates authentication, authorization, refresh-token lifecycle management, modular architecture, database design, email workflows, analytics, API documentation, and production-oriented backend practices.
 
-The project is designed to continuously evolve as new backend concepts are explored and implemented, making it both a learning journey and a portfolio-ready backend application.
+The project continuously evolves as new backend concepts are explored, implemented, debugged, and refined.
 
 ---
 
-## 📌 Project Snapshot
+# 📌 Project Snapshot
 
 | Item | Details |
 |------|---------|
@@ -36,9 +36,11 @@ The project is designed to continuously evolve as new backend concepts are explo
 | 🚀 REST APIs | 30+ |
 | 👥 User Roles | Student · Admin · Super Admin |
 | 🏗️ Architecture | Layered & Service-Based |
-| 🔐 Authentication | JWT + HTTPBearer |
+| 🔐 Authentication | JWT + Refresh Tokens + HTTPBearer |
 | 🗄️ Database | PostgreSQL |
 | 📦 ORM | SQLAlchemy |
+| 📧 Email | FastAPI-Mail |
+| ⚙️ Background Processing | FastAPI BackgroundTasks |
 | 📖 Documentation | Swagger UI & ReDoc |
 
 ---
@@ -47,12 +49,15 @@ The project is designed to continuously evolve as new backend concepts are explo
 
 While learning FastAPI, I wanted to build something beyond tutorial-based CRUD applications.
 
-Olympiad Connect was created to explore how production backend systems are designed by implementing concepts such as:
+Olympiad Connect was created to explore how production-style backend systems are designed by implementing concepts such as:
 
 - Secure Authentication
+- Refresh Token Lifecycle Management
 - Role-Based Authorization
 - Modular Architecture
 - Database Migrations
+- Email Verification Workflows
+- Background Tasks
 - Analytics
 - Service Layer Design
 - Clean API Architecture
@@ -65,13 +70,15 @@ The goal is not only to build a functional application but also to continuously 
 
 The primary objectives of this project are:
 
-- Build scalable REST APIs.
+- Build maintainable and scalable REST APIs.
 - Design a modular backend architecture.
 - Apply secure authentication and authorization.
+- Implement a complete refresh-token lifecycle.
 - Gain practical experience with SQLAlchemy ORM.
 - Explore PostgreSQL database design.
 - Learn database versioning using Alembic.
-- Follow clean coding practices.
+- Apply asynchronous/background processing where appropriate.
+- Follow clean coding and separation-of-concerns practices.
 - Build a backend that can continue evolving with additional features.
 
 ---
@@ -99,7 +106,9 @@ The primary objectives of this project are:
 
 ### Architecture Overview
 
-The application follows a **layered architecture** where responsibilities are separated across routers, services, schemas, models, and the database layer. This structure keeps the codebase modular, maintainable, and easier to scale as the project grows.
+The application follows a **layered architecture** where responsibilities are separated across routers, services, schemas, models, and the database layer.
+
+This structure keeps the codebase modular, maintainable, and easier to extend as the project grows.
 
 ---
 
@@ -130,14 +139,13 @@ olympiad-connect/
 
 | Folder | Responsibility |
 |---------|----------------|
-| `core` | Configuration, authentication, shared utilities |
+| `core` | Configuration, security, authentication, shared utilities |
 | `db` | Database connection and session management |
 | `models` | SQLAlchemy ORM models |
 | `routers` | API endpoints |
 | `schemas` | Pydantic request and response models |
-| `services` | Business logic |
+| `services` | Business logic and application workflows |
 | `utils` | Helper utilities |
-
 
 ---
 
@@ -149,10 +157,76 @@ Olympiad Connect is built around multiple backend modules, each responsible for 
 
 - JWT Authentication
 - HTTPBearer Protected Routes
+- Access Token Generation
+- Refresh Token Generation
+- JTI-Based Refresh Session Identification
+- Hashed Refresh Token Storage
+- Refresh Token Validation
+- Refresh Token Rotation
+- Server-Side Token Revocation
+- Secure Logout
 - Role-Based Access Control (RBAC)
 - Email Verification
 - Password Reset Workflow
 - Protected Administrative Endpoints
+
+### Refresh Token Lifecycle
+
+The refresh-token implementation uses PostgreSQL-backed server-side sessions.
+
+```text
+Login
+  │
+  ├── Access Token
+  │
+  └── Refresh Token + JTI
+            │
+            ▼
+      Hash & Store in DB
+            │
+            ▼
+       Refresh Request
+            │
+            ▼
+      Decode Refresh Token
+            │
+            ▼
+        Extract JTI
+            │
+            ▼
+      Find DB Session
+            │
+            ▼
+   Validate Expiry / Revocation
+            │
+            ▼
+       Verify Token Hash
+            │
+            ▼
+        Check User
+            │
+            ▼
+      Revoke Old Token
+            │
+            ▼
+    Generate New Tokens
+            │
+            ▼
+     Store New Session
+            │
+            ▼
+          Commit
+```
+
+### Refresh Token Security
+
+- Raw refresh tokens are not stored in PostgreSQL.
+- Refresh tokens are stored as hashes.
+- JTI uniquely identifies the corresponding refresh session.
+- Revoked refresh tokens cannot be reused.
+- Successful refresh requests rotate the refresh token.
+- Old-token revocation and new-token creation are committed transactionally.
+- UTC-aware timestamps are used for refresh-session expiry handling.
 
 ---
 
@@ -170,16 +244,17 @@ Olympiad Connect is built around multiple backend modules, each responsible for 
 ## 🎓 Student Profile Management
 
 - Create Student Profiles
+- View Student Profiles
 - Update Student Information
 - Profile Completion Tracking
-- View Student Details
+- Admin Access to Student Profiles
 
 ---
 
 ## 🏆 Olympiad Management
 
 - Create Olympiads
-- Update Olympiads
+- Update Olympiad Details
 - Activate / Deactivate Olympiads
 - View Available Olympiads
 
@@ -188,9 +263,13 @@ Olympiad Connect is built around multiple backend modules, each responsible for 
 ## 📝 Application Management
 
 - Submit Olympiad Applications
+- View Submitted Applications
+- View Individual Applications
 - Review Applications
 - Approve / Reject Applications
 - Track Application Status
+- Filter Applications by Olympiad
+- View Pending Applications
 
 ---
 
@@ -200,8 +279,21 @@ Olympiad Connect is built around multiple backend modules, each responsible for 
 - Student Statistics
 - Olympiad Statistics
 - Application Statistics
-- Approval Rate
+- Pending Applications
+- Approved Applications
+- Rejected Applications
 - Dashboard Metrics
+- Approval Rate
+
+---
+
+## 📧 Email & Background Processing
+
+- Email Verification
+- Password Reset Email Workflow
+- FastAPI-Mail Integration
+- SMTP-based Email Delivery
+- Background Tasks for appropriate non-blocking operations
 
 ---
 
@@ -213,12 +305,14 @@ Olympiad Connect is built around multiple backend modules, each responsible for 
 | **Framework** | FastAPI |
 | **Validation** | Pydantic |
 | **Authentication** | JWT, HTTPBearer |
+| **Refresh Tokens** | JTI, Hashed Token Storage, Rotation, Revocation |
 | **Password Security** | Passlib |
 | **Token Management** | itsdangerous |
 | **Email Services** | FastAPI-Mail, aiosmtplib |
-| **Database** | PostgreSQL |
+| **Background Processing** | FastAPI BackgroundTasks |
 | **ORM** | SQLAlchemy |
-| **Database Migrations** | Alembic |
+| **Database** | PostgreSQL |
+| **Migrations** | Alembic |
 | **Configuration** | Pydantic Settings, Python Dotenv |
 | **API Documentation** | Swagger UI, ReDoc |
 | **ASGI Server** | Uvicorn |
@@ -228,7 +322,7 @@ Olympiad Connect is built around multiple backend modules, each responsible for 
 
 # 🧠 Backend Concepts Implemented
 
-This project explores several backend engineering concepts beyond basic CRUD operations.
+This project explores backend engineering concepts beyond basic CRUD operations.
 
 ### 🏗️ Architecture
 
@@ -236,6 +330,7 @@ This project explores several backend engineering concepts beyond basic CRUD ope
 - Modular Project Structure
 - Service Layer Pattern
 - Separation of Concerns
+- Dependency Injection
 
 ### 🌐 API Design
 
@@ -249,6 +344,11 @@ This project explores several backend engineering concepts beyond basic CRUD ope
 
 - JWT Authentication
 - HTTPBearer Authentication
+- Access & Refresh Token Lifecycle
+- JTI-Based Session Identification
+- Hashed Refresh Token Storage
+- Refresh Token Rotation
+- Server-Side Revocation
 - Role-Based Access Control (RBAC)
 - Password Hashing
 - Email Verification
@@ -259,14 +359,19 @@ This project explores several backend engineering concepts beyond basic CRUD ope
 - SQLAlchemy ORM
 - PostgreSQL
 - Database Relationships
+- Server-Side Refresh Sessions
 - Alembic Database Migrations
+- Transaction-Safe Token Rotation
 
 ### ⚙️ Backend Practices
 
 - Dependency Injection
-- Environment-based Configuration
+- Environment-Based Configuration
+- Background Tasks
 - Modular Code Organization
 - Configuration Management
+- Custom Exception Handling
+- Reusable Request / Response Models
 
 ---
 
@@ -278,7 +383,11 @@ Security is one of the primary focuses of Olympiad Connect.
 
 - JWT-based Authentication
 - HTTPBearer Protected Endpoints
-- Token-based Session Management
+- Access Token Generation
+- Refresh Token Rotation
+- Refresh Token Validation
+- Server-Side Refresh Sessions
+- Token Revocation
 
 ### Authorization
 
@@ -296,6 +405,7 @@ Security is one of the primary focuses of Olympiad Connect.
 
 - Email Verification
 - Password Reset Workflow
+- User Activation / Deactivation
 - Protected Administrative APIs
 
 ---
@@ -304,17 +414,21 @@ Security is one of the primary focuses of Olympiad Connect.
 
 - 🚀 30+ REST APIs
 - 👥 3 User Roles
-- 📂 5 Backend Modules
-- 🔐 JWT Authentication
+- 📂 6 Backend Modules
+- 🔐 JWT + HTTPBearer Authentication
+- 🔄 Refresh Token Rotation
+- 🆔 JTI-Based Refresh Sessions
+- 🔒 Hashed Refresh Token Storage
+- 🚫 Server-Side Token Revocation
 - 🛡️ RBAC Implementation
 - 📧 Email Verification
+- ⚙️ Background Tasks
 - 🔄 Password Reset Workflow
 - 📊 Analytics Dashboard
 - 🗄️ PostgreSQL Database
 - ⚡ SQLAlchemy ORM
 - 🔄 Alembic Database Migrations
 - 📖 Swagger UI & ReDoc Documentation
-
 
 ---
 
@@ -324,7 +438,7 @@ Olympiad Connect is organized into independent backend modules, each responsible
 
 | Module | Description |
 |---------|-------------|
-| 🔐 Authentication | User registration, login, email verification, password reset, JWT generation, and authentication workflows. |
+| 🔐 Authentication | Registration, login, JWT authentication, refresh tokens, token validation, logout, email verification, and password reset workflows. |
 | 👥 Users | User management, role management, account activation, and administrative operations. |
 | 🎓 Student Profiles | Create, update, retrieve, and manage student profile information. |
 | 🏆 Olympiads | Create, update, activate, deactivate, and manage Olympiad details. |
@@ -380,18 +494,18 @@ Every API request follows a structured flow before a response is returned.
 
 # 🗄️ Database Design
 
-The application uses PostgreSQL with SQLAlchemy ORM to model relationships between users, student profiles, Olympiads, and applications.
+The application uses PostgreSQL with SQLAlchemy ORM to model relationships between users, student profiles, Olympiads, applications, and refresh-token sessions.
 
 ```text
                     Users
                       │
-         ┌────────────┴────────────┐
-         │                         │
-         ▼                         ▼
- Student Profiles           Applications
-                                      │
-                                      ▼
-                                 Olympiads
+         ┌────────────┼────────────┐
+         │            │            │
+         ▼            ▼            ▼
+ Student Profiles  Applications  Refresh Sessions
+                        │
+                        ▼
+                    Olympiads
 ```
 
 ### Relationship Overview
@@ -399,6 +513,8 @@ The application uses PostgreSQL with SQLAlchemy ORM to model relationships betwe
 - One User can own one Student Profile.
 - One Student can submit multiple Applications.
 - One Olympiad can receive multiple Applications.
+- One User can have multiple refresh-token sessions.
+- Refresh-token sessions store JTI, token hash, expiry, and revocation state.
 - Admins manage Olympiads and Applications.
 - Super Admins manage administrative users and system-level operations.
 
@@ -418,8 +534,6 @@ cd olympiad-connect
 ```bash
 python -m venv .venv
 ```
-
-Activate the virtual environment.
 
 **Windows**
 
@@ -496,13 +610,12 @@ MAIL_SSL_TLS=
 
 # 📸 Project Preview
 
-> The following screenshots provide a quick overview of the application's structure and API documentation.
+The following screenshots provide a quick overview of the project's structure and API documentation.
 
 ## 🏠 Project Structure
 
 > Modular folder structure following a layered architecture.
 
-<!-- Add Screenshot -->
 ![Project Structure](assets/screenshots/project-structure.png)
 
 ---
@@ -511,9 +624,7 @@ MAIL_SSL_TLS=
 
 > Interactive API documentation for testing and exploring endpoints.
 
-<!-- Add Screenshot -->
 ![Swagger UI](assets/screenshots/swagger-overview.png)
-
 
 ---
 
@@ -521,7 +632,6 @@ MAIL_SSL_TLS=
 
 > Clean and detailed API reference generated automatically by FastAPI.
 
-<!-- Add Screenshot -->
 ![ReDoc](assets/screenshots/redoc-overview.png)
 
 ---
@@ -530,8 +640,8 @@ MAIL_SSL_TLS=
 
 > Example analytics response showcasing dashboard metrics.
 
-<!-- Add Screenshot -->
 ![Analytics](assets/screenshots/analytics-dashboard.png)
+
 ---
 
 # 📈 Project Statistics
@@ -541,10 +651,12 @@ MAIL_SSL_TLS=
 | 🚀 REST APIs | 30+ |
 | 📂 Backend Modules | 6 |
 | 👥 User Roles | 3 |
-| 🛡️ Authentication | JWT + HTTPBearer |
+| 🛡️ Authentication | JWT + Refresh Tokens + HTTPBearer |
 | 🗄️ Database | PostgreSQL |
 | ⚡ ORM | SQLAlchemy |
 | 🔄 Database Migrations | Alembic |
+| 📧 Email | FastAPI-Mail |
+| ⚙️ Background Processing | FastAPI BackgroundTasks |
 | 📖 API Documentation | Swagger UI & ReDoc |
 
 ---
@@ -555,9 +667,17 @@ MAIL_SSL_TLS=
 
 - JWT Authentication
 - HTTPBearer Authentication
+- Access Token Generation
+- Refresh Token Authentication
+- JTI-Based Refresh Sessions
+- Hashed Refresh Token Storage
+- Refresh Token Rotation
+- Server-Side Token Revocation
+- Secure Logout
 - Role-Based Access Control (RBAC)
 - Email Verification
 - Password Reset Workflow
+- Background Tasks
 - User Management
 - Student Profile Module
 - Olympiad Management
@@ -572,9 +692,8 @@ MAIL_SSL_TLS=
 
 ## 🚧 Currently Working On
 
-- Refresh Token Authentication
-- Secure Logout
 - API Response Improvements
+- Expanding Automated Testing Coverage
 
 ---
 
@@ -584,8 +703,10 @@ MAIL_SSL_TLS=
 - Docker Support
 - CI/CD Pipeline
 - Cloud Deployment
-- AI-powered Features
+- AI-Powered Features
 - Performance Optimizations
+- Advanced Session Management
+- Refresh-Token Reuse Detection
 
 ---
 
@@ -593,15 +714,22 @@ MAIL_SSL_TLS=
 
 Building Olympiad Connect has helped me gain practical experience with:
 
-- Designing RESTful APIs using FastAPI
-- Structuring scalable backend applications
-- Implementing JWT Authentication and Role-Based Access Control
-- Managing PostgreSQL databases using SQLAlchemy ORM
-- Versioning database schema with Alembic
-- Building secure authentication workflows
-- Designing modular service-layer architecture
-- Documenting APIs using Swagger UI and ReDoc
-- Applying backend development best practices
+- FastAPI Backend Development
+- RESTful API Design
+- Layered and Service-Based Architecture
+- JWT Authentication
+- Refresh Token Lifecycle Management
+- JTI-Based Server-Side Sessions
+- Token Hashing and Revocation
+- Role-Based Access Control
+- SQLAlchemy ORM
+- PostgreSQL Database Design
+- Alembic Database Migrations
+- Email Verification and Password Reset Workflows
+- Background Tasks
+- Custom Exception Handling
+- API Documentation with Swagger UI and ReDoc
+- Backend Security and Transaction Safety
 
 ---
 
@@ -609,7 +737,7 @@ Building Olympiad Connect has helped me gain practical experience with:
 
 Olympiad Connect is an evolving backend project.
 
-The goal is to continue improving it by implementing production-ready backend features such as refresh token authentication, Docker support, automated testing, cloud deployment, CI/CD, and AI-powered capabilities while continuously exploring modern backend engineering practices.
+The goal is to continue improving it by implementing production-oriented backend features such as automated testing, Docker, CI/CD, cloud deployment, advanced session management, performance optimizations, and AI-powered capabilities while continuously exploring modern backend engineering practices.
 
 ---
 
@@ -617,7 +745,7 @@ The goal is to continue improving it by implementing production-ready backend fe
 
 This project was not built after mastering FastAPI.
 
-It was built **while learning FastAPI**, with every feature representing a new concept explored, implemented, and refined.
+It was built **while learning FastAPI**, with every feature representing a new concept explored, implemented, debugged, and refined.
 
 Instead of following isolated tutorials, the focus has always been on applying backend engineering concepts to a real-world application. As new technologies and best practices are learned, they are integrated into the project, making Olympiad Connect a continuously evolving backend system.
 
