@@ -253,6 +253,8 @@ class UserServices:
         except Exception:
             session.rollback()
             raise
+        
+    
 
     def refresh_user_sessions(
         self, refresh_token_data: RefreshTokenModel, session: Session

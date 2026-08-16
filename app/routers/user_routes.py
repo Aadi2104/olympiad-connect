@@ -8,6 +8,7 @@ from app.db.session import get_db
 from app.models.user_model import User, UserRole
 from app.schemas.user_schemas import (
     MessageResponseModel,
+    RefreshTokenModel,
     UserCreateModel,
     UserForgotPasswordModel,
     UserLoginModel,
@@ -16,8 +17,6 @@ from app.schemas.user_schemas import (
     UserResetPasswordModel,
     UserResponseModel,
     UserVerifyModel,
-    RefreshTokenModel,
-    
 )
 from app.services.user_services import UserServices
 
